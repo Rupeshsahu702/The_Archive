@@ -10,6 +10,8 @@ import {
   FiSettings,
   FiFileText,
   FiLogOut,
+  FiLock,
+  FiUser
 } from "react-icons/fi";
 
 const menuItems = [
