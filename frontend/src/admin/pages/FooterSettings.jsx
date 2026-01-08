@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiTrash2, FiSave, FiRefreshCw, FiExternalLink } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiSave, FiRefreshCw } from 'react-icons/fi';
 import { IoIosArrowForward } from 'react-icons/io';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -13,8 +13,6 @@ const FooterSettings = () => {
     const [productsList, setProductsList] = useState([]);
 
     const [settings, setSettings] = useState({
-        editorsPick: [],
-        moreLinks: [],
         trendingProducts: [],
         copyrightText: '© 2025 The Archive. All rights reserved.',
         showPrivacyLink: true,
@@ -80,7 +78,11 @@ const FooterSettings = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify(settings)
+                body: JSON.stringify({
+                    ...settings,
+                    editorsPick: [], // Empty since we removed the section
+                    moreLinks: []    // Empty since we removed the section
+                })
             });
 
             const result = await response.json();
@@ -98,54 +100,8 @@ const FooterSettings = () => {
         }
     };
 
-    // Editor's Pick handlers
-    const addEditorsPickLink = () => {
-        setSettings(prev => ({
-            ...prev,
-            editorsPick: [...prev.editorsPick, { label: '', url: '', isExternal: false }]
-        }));
-    };
-
-    const updateEditorsPickLink = (index, field, value) => {
-        setSettings(prev => {
-            const updated = [...prev.editorsPick];
-            updated[index] = { ...updated[index], [field]: value };
-            return { ...prev, editorsPick: updated };
-        });
-    };
-
-    const removeEditorsPickLink = (index) => {
-        setSettings(prev => ({
-            ...prev,
-            editorsPick: prev.editorsPick.filter((_, i) => i !== index)
-        }));
-    };
-
-    // More Links handlers
-    const addMoreLink = () => {
-        setSettings(prev => ({
-            ...prev,
-            moreLinks: [...prev.moreLinks, { label: '', url: '', isExternal: false }]
-        }));
-    };
-
-    const updateMoreLink = (index, field, value) => {
-        setSettings(prev => {
-            const updated = [...prev.moreLinks];
-            updated[index] = { ...updated[index], [field]: value };
-            return { ...prev, moreLinks: updated };
-        });
-    };
-
-    const removeMoreLink = (index) => {
-        setSettings(prev => ({
-            ...prev,
-            moreLinks: prev.moreLinks.filter((_, i) => i !== index)
-        }));
-    };
-
-    // Trending Products handlers
     const addTrendingProduct = () => {
+        if (settings.trendingProducts.length >= 3) return;
         setSettings(prev => ({
             ...prev,
             trendingProducts: [...prev.trendingProducts, { productId: '', customImage: '', customLink: '' }]
@@ -176,308 +132,168 @@ const FooterSettings = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="min-h-screen bg-gray-50 text-black">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
                 {/* Breadcrumb */}
-                <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+                <nav className="flex items-center gap-2 text-xs text-gray-500 mb-6 uppercase tracking-widest">
                     <Link to="/admin" className="hover:text-black">Dashboard</Link>
-                    <IoIosArrowForward className="w-4 h-4" />
-                    <span className="text-black font-medium">Footer Settings</span>
+                    <IoIosArrowForward className="w-3 h-3" />
+                    <span className="text-black font-bold">Footer Management</span>
                 </nav>
 
                 {/* Header */}
-                <div className="flex items-start justify-between mb-8">
+                <div className="flex items-start justify-between mb-10">
                     <div>
-                        <h1 className="text-3xl font-bold text-black mb-2">Footer Settings</h1>
-                        <p className="text-gray-600">Manage footer links, trending products, and legal information.</p>
+                        <h1 className="text-3xl font-bold tracking-tight mb-2">FOOTER SETTINGS</h1>
+                        <p className="text-sm text-gray-500 uppercase tracking-widest">Manage Trending Now products and copyright info.</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         <button
                             onClick={fetchSettings}
-                            className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg"
-                            title="Refresh"
+                            className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
                         >
                             <FiRefreshCw className="w-5 h-5" />
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-black text-white rounded-lg hover:bg-zinc-800 disabled:opacity-50 font-bold text-xs uppercase tracking-widest"
                         >
                             <FiSave className="w-4 h-4" />
-                            {saving ? 'Saving...' : 'Save Changes'}
+                            {saving ? 'Saving...' : 'Save'}
                         </button>
                     </div>
                 </div>
 
                 {/* Messages */}
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-                        {error}
-                    </div>
-                )}
-                {success && (
-                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
-                        {success}
-                    </div>
-                )}
+                {error && <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm border border-red-100">{error}</div>}
+                {success && <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm border border-green-100">{success}</div>}
 
                 <div className="space-y-8">
 
-                    {/* Editor's Pick Section */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-xl font-bold text-black">Editor's Pick</h2>
-                                <p className="text-sm text-gray-500">Links displayed in the footer's Editor's Pick section</p>
-                            </div>
-                            <button
-                                onClick={addEditorsPickLink}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                            >
-                                <FiPlus className="w-4 h-4" />
-                                Add Link
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {settings.editorsPick.map((link, index) => (
-                                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                                    <div className="flex-1 grid grid-cols-2 gap-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Label (e.g., Design Systems 2024)"
-                                            value={link.label}
-                                            onChange={(e) => updateEditorsPickLink(index, 'label', e.target.value)}
-                                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="URL (e.g., /editorspick)"
-                                            value={link.url}
-                                            onChange={(e) => updateEditorsPickLink(index, 'url', e.target.value)}
-                                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                        />
-                                    </div>
-                                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={link.isExternal}
-                                            onChange={(e) => updateEditorsPickLink(index, 'isExternal', e.target.checked)}
-                                            className="rounded"
-                                        />
-                                        <FiExternalLink className="w-4 h-4" />
-                                    </label>
-                                    <button
-                                        onClick={() => removeEditorsPickLink(index)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                                    >
-                                        <FiTrash2 className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            ))}
-                            {settings.editorsPick.length === 0 && (
-                                <p className="text-gray-400 text-center py-6">No links added. Click "Add Link" to create one.</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* More Links Section */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-xl font-bold text-black">More Links</h2>
-                                <p className="text-sm text-gray-500">Links displayed in the footer's More section</p>
-                            </div>
-                            <button
-                                onClick={addMoreLink}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                            >
-                                <FiPlus className="w-4 h-4" />
-                                Add Link
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            {settings.moreLinks.map((link, index) => (
-                                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                                    <div className="flex-1 grid grid-cols-2 gap-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Label (e.g., About Us)"
-                                            value={link.label}
-                                            onChange={(e) => updateMoreLink(index, 'label', e.target.value)}
-                                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="URL (e.g., /about)"
-                                            value={link.url}
-                                            onChange={(e) => updateMoreLink(index, 'url', e.target.value)}
-                                            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                        />
-                                    </div>
-                                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={link.isExternal}
-                                            onChange={(e) => updateMoreLink(index, 'isExternal', e.target.checked)}
-                                            className="rounded"
-                                        />
-                                        <FiExternalLink className="w-4 h-4" />
-                                    </label>
-                                    <button
-                                        onClick={() => removeMoreLink(index)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                                    >
-                                        <FiTrash2 className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            ))}
-                            {settings.moreLinks.length === 0 && (
-                                <p className="text-gray-400 text-center py-6">No links added. Click "Add Link" to create one.</p>
-                            )}
-                        </div>
-                    </div>
-
                     {/* Trending Products Section */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h2 className="text-xl font-bold text-black">Trending Now</h2>
-                                <p className="text-sm text-gray-500">Products displayed in the Trending Now section (max 3)</p>
+                                <h2 className="text-lg font-bold tracking-tight">TRENDING NOW</h2>
+                                <p className="text-xs text-gray-400 uppercase tracking-widest mt-1">Select up to 3 showcase products</p>
                             </div>
                             {settings.trendingProducts.length < 3 && (
                                 <button
                                     onClick={addTrendingProduct}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                    className="flex items-center gap-2 px-4 py-2 bg-zinc-50 text-black border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold uppercase tracking-widest"
                                 >
                                     <FiPlus className="w-4 h-4" />
-                                    Add Product
+                                    Add
                                 </button>
                             )}
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {settings.trendingProducts.map((item, index) => (
-                                <div key={index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div key={index} className="flex flex-col sm:flex-row gap-6 p-6 bg-zinc-50 rounded-xl border border-zinc-100 relative group">
                                     {/* Preview */}
-                                    <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                        {item.image || item.customImage ? (
+                                    <div className="w-24 h-24 bg-white rounded-lg overflow-hidden flex-shrink-0 shadow-sm border border-zinc-200">
+                                        {(item.customImage || item.image) ? (
                                             <img
                                                 src={item.customImage || item.image}
                                                 alt="Preview"
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                                No Image
+                                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400 font-bold uppercase tracking-tighter text-center px-1">
+                                                No Preview
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="flex-1 space-y-3">
-                                        <select
-                                            value={item.productId || ''}
-                                            onChange={(e) => updateTrendingProduct(index, 'productId', e.target.value)}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black bg-white"
-                                        >
-                                            <option value="">Select a product (optional)</option>
-                                            {productsList.map(p => (
-                                                <option key={p._id} value={p._id}>{p.name} - {p.category}</option>
-                                            ))}
-                                        </select>
+                                    <div className="flex-1 space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Select Product</label>
+                                            <select
+                                                value={item.productId || ''}
+                                                onChange={(e) => updateTrendingProduct(index, 'productId', e.target.value)}
+                                                className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black bg-white text-sm"
+                                            >
+                                                <option value="">Manual Override / No Product</option>
+                                                {productsList.map(p => (
+                                                    <option key={p._id} value={p._id}>{p.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <input
-                                                type="text"
-                                                placeholder="Custom Image URL (optional)"
-                                                value={item.customImage || ''}
-                                                onChange={(e) => updateTrendingProduct(index, 'customImage', e.target.value)}
-                                                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Custom Link URL (optional)"
-                                                value={item.customLink || ''}
-                                                onChange={(e) => updateTrendingProduct(index, 'customLink', e.target.value)}
-                                                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
-                                            />
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Custom Image URL</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="https://..."
+                                                    value={item.customImage || ''}
+                                                    onChange={(e) => updateTrendingProduct(index, 'customImage', e.target.value)}
+                                                    className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black bg-white text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Custom Link</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="/product/..."
+                                                    value={item.customLink || ''}
+                                                    onChange={(e) => updateTrendingProduct(index, 'customLink', e.target.value)}
+                                                    className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black bg-white text-sm"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
                                     <button
                                         onClick={() => removeTrendingProduct(index)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                        className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-red-500 transition-colors"
                                     >
-                                        <FiTrash2 className="w-5 h-5" />
+                                        <FiTrash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             ))}
                             {settings.trendingProducts.length === 0 && (
-                                <p className="text-gray-400 text-center py-6">
-                                    No products added. Will show bestselling products by default.
-                                </p>
+                                <div className="text-center py-12 border-2 border-dashed border-zinc-100 rounded-xl">
+                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-[0.2em]">Add up to 3 trending items</p>
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Legal & Copyright Section */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                        <h2 className="text-xl font-bold text-black mb-6">Legal & Copyright</h2>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Copyright Text</label>
+                    {/* Legal Info */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+                        <h2 className="text-lg font-bold tracking-tight mb-6 uppercase tracking-widest">General Info</h2>
+                        <div className="space-y-6">
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Copyright Text</label>
                                 <input
                                     type="text"
                                     value={settings.copyrightText}
                                     onChange={(e) => setSettings(prev => ({ ...prev, copyrightText: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                    placeholder="© 2025 The Archive. All rights reserved."
+                                    className="w-full px-4 py-2.5 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
                                 />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="flex items-center gap-3 mb-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={settings.showPrivacyLink}
-                                            onChange={(e) => setSettings(prev => ({ ...prev, showPrivacyLink: e.target.checked }))}
-                                            className="rounded"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Show Privacy Link</span>
-                                    </label>
+                            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-50">
+                                <div className="flex items-center gap-3">
                                     <input
-                                        type="text"
-                                        value={settings.privacyUrl}
-                                        onChange={(e) => setSettings(prev => ({ ...prev, privacyUrl: e.target.value }))}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                        placeholder="/privacy"
-                                        disabled={!settings.showPrivacyLink}
+                                        type="checkbox"
+                                        checked={settings.showPrivacyLink}
+                                        onChange={(e) => setSettings(prev => ({ ...prev, showPrivacyLink: e.target.checked }))}
+                                        className="rounded border-zinc-300 text-black focus:ring-0"
                                     />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Privacy Policy</span>
                                 </div>
-
-                                <div>
-                                    <label className="flex items-center gap-3 mb-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={settings.showTermsLink}
-                                            onChange={(e) => setSettings(prev => ({ ...prev, showTermsLink: e.target.checked }))}
-                                            className="rounded"
-                                        />
-                                        <span className="text-sm font-medium text-gray-700">Show Terms Link</span>
-                                    </label>
+                                <div className="flex items-center gap-3">
                                     <input
-                                        type="text"
-                                        value={settings.termsUrl}
-                                        onChange={(e) => setSettings(prev => ({ ...prev, termsUrl: e.target.value }))}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                                        placeholder="/terms"
-                                        disabled={!settings.showTermsLink}
+                                        type="checkbox"
+                                        checked={settings.showTermsLink}
+                                        onChange={(e) => setSettings(prev => ({ ...prev, showTermsLink: e.target.checked }))}
+                                        className="rounded border-zinc-300 text-black focus:ring-0"
                                     />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Terms of Service</span>
                                 </div>
                             </div>
                         </div>
